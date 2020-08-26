@@ -1,15 +1,18 @@
 import React from 'react';
-import { Table } from 'react-bootstrap';
-
+import { Table, Form } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { searchNotes, deleteNoteData } from './store/note.action';
+
+import { fetchNotes, deleteNoteData } from './store/note.action';
 import NoteDetailsModal from './NoteDetailsModal';
 import AddEditModal from './AddEditModal';
+import { Loader } from '../../utils/Loader';
 
 class NoteList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            searchTerm:'',
+            filteredNotes: [],
             showModal: false,
             noteId: null,
             selectedNote: null
@@ -17,18 +20,45 @@ class NoteList extends React.Component {
     }
 
     async componentDidMount() {
-        await this.props.searchNotes();
+        await this.props.fetchNotes();
     }
 
-    onNoteSelect(note) {
+    //search notes from list
+    onSearch = (event, notes) => {
+        const target = event.target;
+        const searchTerm = target.value.toLowerCase();
+
+        let filteredNotes = [];
+
+        if(notes && notes.length && searchTerm.length){
+            filteredNotes = notes.filter(note => {
+                const title = note.title.toLowerCase();
+                const description = note.description.toLowerCase();
+
+                return title.includes(searchTerm) || description.includes(searchTerm);
+            })
+        }
+
+        if(!searchTerm.length){
+            filteredNotes = [];
+        }
+        this.setState({
+            searchTerm: searchTerm,
+            filteredNotes
+        });
+    }
+
+    //for notes detail modal
+    onNoteSelect = (note) =>{
         this.setState({
             selectedNote: note
         });
     }
 
+    //when modal close from add/edit/details
     onModalClose = async (isRefresh) => {
         if(isRefresh){
-            await this.props.searchNotes();
+            await this.props.fetchNotes();
         }
 
         this.setState({
@@ -39,6 +69,7 @@ class NoteList extends React.Component {
         });
     }
     
+    //open add/edit note modal
     addEditNote = (noteId) => {
         this.setState({
             showModal: true,
@@ -48,16 +79,28 @@ class NoteList extends React.Component {
         });
     }
 
+    //delete note function
     deleteNote = async(noteId) => {
         const response = await deleteNoteData(noteId);
 
         if(response){
-            await this.props.searchNotes();
+            await this.props.fetchNotes();
         }
     }
 
     render() {
-        let tableList = this.props.noteList && this.props.noteList.map((note, index) => {
+        
+        //set filtered notes list if user search from list
+        let noteList = [];
+
+        if(this.state.searchTerm.length){
+            noteList = this.state.filteredNotes
+        } else {
+            noteList = this.props.noteList;
+        }
+        
+        //set table list for dynamically rendered
+        let tableList = noteList && noteList.length ? noteList.map((note, index) => {
             return (
                 <tr key={index}>
                     <td>{note.title}</td>
@@ -69,15 +112,23 @@ class NoteList extends React.Component {
                     </td>
                 </tr>
             )
-        });
+        }): <tr><td colSpan="3">No Records Found</td></tr>;
 
         return (
             <div>
                 <h2>Notes List</h2>
                 <div className="mt-4">
+                    <Form>
+                        <Form.Group controlId="searchTerm">
+                            <Form.Control className="col-md-4" type="text" placeholder="Search by title or description"
+                            onChange={(event) => this.onSearch(event, this.props.noteList)}
+                            value={this.state.searchTerm}
+                            >
+                            </Form.Control>
+                        </Form.Group>
+                    </Form>
                     <button type="button" className="btn btn-success float-right mb-4" onClick={() => this.addEditNote('')}>Add Note</button>
                 </div>
-
                 <Table striped bordered hover>
                     <thead>
                         <tr>
@@ -87,7 +138,7 @@ class NoteList extends React.Component {
                         </tr>
                     </thead>
                     <tbody>
-                        {this.props.isProcessing ? <tr><td colSpan="3">Fetching Records</td></tr>: tableList}
+                        {this.props.isProcessing ? <tr><td colSpan="3"><Loader /></td></tr>: tableList}
                     </tbody>
                 </Table>
 
@@ -112,7 +163,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = {
-    searchNotes
+    fetchNotes
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(NoteList);

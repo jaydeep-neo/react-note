@@ -19,6 +19,7 @@ class AddEditModal extends React.Component {
         }
     }
     async componentDidMount(){
+        //in edit note modal fetch note details
         if(this.state.noteId){
             const response = await fetchNoteDetail(this.state.noteId);
 
@@ -30,6 +31,7 @@ class AddEditModal extends React.Component {
             }
         }
     }
+    
     handleChangeTitle = (event) => {
         this.setState({ title: event.target.value });
     }

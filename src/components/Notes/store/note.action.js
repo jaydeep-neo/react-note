@@ -1,30 +1,34 @@
-import { SEARCH_NOTE_START, SEARCH_NOTE_SUCCESS, SEARCH_NOTE_FAILURE } from './note.types';
+import { FETCH_NOTE_START, FETCH_NOTE_SUCCESS, FETCH_NOTE_FAILURE } from './note.types';
 import { getNoteList, getNoteDetail, saveNote, updateNote, deleteNote} from '../../../service/NoteService';
 
-const searchNoteStart = (payload) => {
+//when note fetch start
+const fetchNoteStart = (payload) => {
     return {
-        type: SEARCH_NOTE_START,
+        type: FETCH_NOTE_START,
         payload
     }
 }
 
-const searchNoteSuccess = (payload) => {
+//when note fetch successfully
+const fetchNoteSuccess = (payload) => {
     return {
-        type: SEARCH_NOTE_SUCCESS,
+        type: FETCH_NOTE_SUCCESS,
         payload
     }
 }
 
-const searchNoteFailure = (payload) => {
+// when note fetch error
+const fetchNoteFailure = (payload) => {
     return {
-        type: SEARCH_NOTE_FAILURE,
+        type: FETCH_NOTE_FAILURE,
         payload
     }
 }
 
-export const searchNotes = () => {
+// action for fetching notes
+export const fetchNotes = () => {
     return dispatch => {
-        dispatch(searchNoteStart({
+        dispatch(fetchNoteStart({
             isProcessing: true,
             noteList: null,
             error: null
@@ -33,7 +37,7 @@ export const searchNotes = () => {
         getNoteList()
         .then(response => {
             if(response  && response.status===200){
-                dispatch(searchNoteSuccess({
+                dispatch(fetchNoteSuccess({
                     noteList: response.data,
                     isProcessing: false,
                     error: null
@@ -48,10 +52,10 @@ export const searchNotes = () => {
                 errorMessage = 'No record found for notes';
             }
 
-            dispatch(searchNoteFailure({
+            dispatch(fetchNoteFailure({
                 noteList: null,
                 isProcessing: false,
-                error: null
+                error: errorMessage
             }));
         });      
     }
