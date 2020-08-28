@@ -86,9 +86,9 @@ export const saveNoteData = async (data) => {
 }
 
 //update note
-export const updateNoteData = async (data, noteId) => {
+export const updateNoteData = async (data) => {
     try{
-       const response = await updateNote(data, noteId);
+       const response = await updateNote(data);
 
        return response;
     }
